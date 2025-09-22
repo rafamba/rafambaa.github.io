@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tu Regalo 🌼</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="gift">
+  <header class="topbar">
+    <a href="index.html" class="back">← Volver</a>
+    <h2>Para ti, con mucho amor 💜</h2>
+  </header>
+
+  <main class="gift-wrap">
+    <figure class="card">
+      <!-- 🎥 Video vertical -->
+      <video src="assets/flores.mp4.MOV" controls autoplay loop muted playsinline></video>
+      <figcaption>
+        FELIZ 21 DE SEPTIEMBRE, TE AMO MUCHOO LYNN❤️ ATT. TU NOVIO RAFAEL✨
+      </figcaption>
+    </figure>
+
+    <section class="player">
+      <button id="playBtn" class="btn">Reproducir Canción 🎵</button>
+      <audio id="song" preload="auto">
+        <source src="assets/regalo.mp3.mp3" type="audio/mpeg">
+      </audio>
+    </section>
+  </main>
+
+  <!-- Lluvia de flores -->
+  <div class="rain"></div>
+
+  <script>
+    const btn = document.getElementById('playBtn');
+    const song = document.getElementById('song');
+
+    btn.addEventListener('click', () => {
+      if (song.paused) {
+        song.play();
+        btn.textContent = 'Pausar Canción ⏸️';
+      } else {
+        song.pause();
+        btn.textContent = 'Reproducir Canción 🎵';
+      }
+    });
+  </script>
+</body>
+</html>
