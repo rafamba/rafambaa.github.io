@@ -7,8 +7,13 @@
 -- Si ya le diste Play una vez y tocaste algo a mano en Studio (moviste
 -- una tecla, le cambiaste el color, etc.), el script no lo pisa: solo
 -- construye el teclado si todavía no existe un Model "Keyboard".
+--
+-- IMPORTANTE: usá el botón "Play" (F5), no "Run" (F8) -- Run no pone
+-- un personaje en el mundo, así que no hay nadie a quien teletransportar
+-- y la cámara se queda donde estaba antes de correr el script.
 
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
 local KEY_SIZE = 4    -- studs (ancho/profundidad de una tecla normal)
 local GAP = 0.5       -- studs entre teclas
@@ -116,10 +121,37 @@ local function highlightTargetKeys(keyboard)
 	end
 end
 
+-- El teclado se arma siempre en (0,0,0). Si tu mapa ya tenía otro
+-- spawn en otro lado del mundo, ibas a aparecer lejos y no ibas a
+-- ver nada: por eso acá abajo se teletransporta al jugador justo
+-- enfrente del teclado apenas aparece, sin importar dónde esté el
+-- SpawnLocation.
+local START_CFRAME = CFrame.new(0, THICKNESS + 3, -10)
+
+local function moveCharacterToKeyboard(character)
+	local root = character:WaitForChild("HumanoidRootPart", 5)
+	if root then
+		character:PivotTo(START_CFRAME)
+	end
+end
+
+local function onPlayerAdded(player)
+	player.CharacterAdded:Connect(moveCharacterToKeyboard)
+	if player.Character then
+		moveCharacterToKeyboard(player.Character)
+	end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	onPlayerAdded(player)
+end
+Players.PlayerAdded:Connect(onPlayerAdded)
+
 local keyboard = Workspace:FindFirstChild("Keyboard")
 if not keyboard then
 	keyboard = buildKeyboard()
 	buildGround()
+	print("[KeyboardMap] Teclado creado en Workspace.Keyboard (busca 'Keyboard' y 'Ground' en el Explorer si no lo ves).")
 end
 
 highlightTargetKeys(keyboard)
