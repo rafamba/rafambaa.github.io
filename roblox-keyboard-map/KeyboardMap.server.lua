@@ -1,157 +1,666 @@
--- Poné este Script directo en Workspace y dale Play.
---
--- Arma un teclado gigante tirado sobre pasto (si todavía no existe) y
--- hace que SOLO las teclas R, O, B, U, X y Enter se iluminen de verde
--- al pisarlas. El resto de las teclas no hacen nada.
---
--- Si ya le diste Play una vez y tocaste algo a mano en Studio (moviste
--- una tecla, le cambiaste el color, etc.), el script no lo pisa: solo
--- construye el teclado si todavía no existe un Model "Keyboard".
---
--- IMPORTANTE: usá el botón "Play" (F5), no "Run" (F8) -- Run no pone
--- un personaje en el mundo, así que no hay nadie a quien teletransportar
--- y la cámara se queda donde estaba antes de correr el script.
-
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
 
-local KEY_SIZE = 4    -- studs (ancho/profundidad de una tecla normal)
-local GAP = 0.5       -- studs entre teclas
-local THICKNESS = 1.5 -- alto de cada tecla
+--------------------------------------------------
+-- BORRAR MAPA ANTERIOR
+--------------------------------------------------
 
--- Cada fila es una lista de teclas {texto, ancho_en_unidades}.
--- 1 unidad de ancho = KEY_SIZE.
-local ROWS = {
-	{ {"Esc",1}, {"1",1}, {"2",1}, {"3",1}, {"4",1}, {"5",1}, {"6",1}, {"7",1}, {"8",1}, {"9",1}, {"0",1} },
-	{ {"Tab",1.5}, {"Q",1}, {"W",1}, {"E",1}, {"R",1}, {"T",1}, {"Y",1}, {"U",1}, {"I",1}, {"O",1}, {"P",1} },
-	{ {"Bloq Mayus",1.75}, {"A",1}, {"S",1}, {"D",1}, {"F",1}, {"G",1}, {"H",1}, {"J",1}, {"K",1}, {"L",1}, {"Enter",2} },
-	{ {"Shift",2.25}, {"Z",1}, {"X",1}, {"C",1}, {"V",1}, {"B",1}, {"N",1}, {"M",1}, {"Shift",2.25} },
-	{ {"Ctrl",1.5}, {"Win",1}, {"Alt",1}, {"Space",6}, {"Alt",1}, {"Win",1}, {"Ctrl",1.5} },
+local oldMap = Workspace:FindFirstChild("TECLADO_ROBUX")
+
+if oldMap then
+	oldMap:Destroy()
+end
+
+local map = Instance.new("Folder")
+map.Name = "TECLADO_ROBUX"
+map.Parent = Workspace
+
+--------------------------------------------------
+-- COLORES
+--------------------------------------------------
+
+local WHITE = Color3.fromRGB(245,245,245)
+local BLACK = Color3.fromRGB(25,28,35)
+local GREEN = Color3.fromRGB(40,255,70)
+local GRASS = Color3.fromRGB(80,170,90)
+local ROCK = Color3.fromRGB(100,100,100)
+
+--------------------------------------------------
+-- TECLAS ESPECIALES
+--------------------------------------------------
+
+local specialKeys = {
+	R = true,
+	O = true,
+	B = true,
+	U = true,
+	X = true,
+	ENTER = true
 }
 
-local TARGET_KEYS = {
-	["R"] = true, ["O"] = true, ["B"] = true,
-	["U"] = true, ["X"] = true, ["ENTER"] = true,
-}
-local LIT_COLOR = Color3.fromRGB(0, 255, 0)
+--------------------------------------------------
+-- ILUMINACION
+--------------------------------------------------
 
-local function createKeyPart(label, width, cframe, parent)
-	local key = Instance.new("Part")
-	key.Name = label
-	key.Anchored = true
-	key.Material = Enum.Material.SmoothPlastic
-	key.Color = Color3.fromRGB(255, 255, 255)
-	key.Size = Vector3.new(width, THICKNESS, KEY_SIZE)
-	key.CFrame = cframe
-	key.Parent = parent
+Lighting.ClockTime = 14
+Lighting.Brightness = 2.5
+Lighting.Ambient = Color3.fromRGB(120,120,120)
+Lighting.OutdoorAmbient = Color3.fromRGB(150,150,150)
+
+--------------------------------------------------
+-- CREAR PARTE
+--------------------------------------------------
+
+local function createPart(name, size, position, color, material)
+
+	local part = Instance.new("Part")
+
+	part.Name = name
+	part.Size = size
+	part.Position = position
+
+	part.Anchored = true
+	part.CanCollide = true
+
+	part.Color = color
+	part.Material = material or Enum.Material.SmoothPlastic
+
+	part.TopSurface = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+
+	part.Parent = map
+
+	return part
+end
+
+--------------------------------------------------
+-- PISO COMPLETO DE PASTO
+--------------------------------------------------
+
+createPart(
+	"Grass",
+	Vector3.new(400,1,400),
+	Vector3.new(0,0,0),
+	GRASS,
+	Enum.Material.Grass
+)
+
+--------------------------------------------------
+-- BASE DEL TECLADO
+--------------------------------------------------
+
+createPart(
+	"KeyboardBase",
+	Vector3.new(100,1.5,48),
+	Vector3.new(0,1,0),
+	BLACK,
+	Enum.Material.SmoothPlastic
+)
+
+--------------------------------------------------
+-- MONTAÑAS LEJANAS
+--------------------------------------------------
+
+local function createMountain(x,z,height,width)
+
+	local mountain = Instance.new("WedgePart")
+
+	mountain.Name = "Mountain"
+
+	mountain.Size = Vector3.new(
+		width,
+		height,
+		width
+	)
+
+	mountain.Position = Vector3.new(
+		x,
+		height / 2,
+		z
+	)
+
+	mountain.Anchored = true
+	mountain.CanCollide = true
+
+	mountain.Color = ROCK
+	mountain.Material = Enum.Material.Rock
+
+	mountain.Orientation = Vector3.new(
+		0,
+		math.random(0,360),
+		0
+	)
+
+	mountain.Parent = map
+
+end
+
+--------------------------------------------------
+-- MONTAÑAS ATRAS
+--------------------------------------------------
+
+for x = -170,170,35 do
+
+	createMountain(
+		x,
+		-170,
+		math.random(35,60),
+		math.random(25,40)
+	)
+
+end
+
+--------------------------------------------------
+-- MONTAÑAS ENFRENTE
+--------------------------------------------------
+
+for x = -170,170,35 do
+
+	createMountain(
+		x,
+		170,
+		math.random(35,60),
+		math.random(25,40)
+	)
+
+end
+
+--------------------------------------------------
+-- MONTAÑAS IZQUIERDA
+--------------------------------------------------
+
+for z = -130,130,40 do
+
+	createMountain(
+		-180,
+		z,
+		math.random(35,55),
+		math.random(25,38)
+	)
+
+end
+
+--------------------------------------------------
+-- MONTAÑAS DERECHA
+--------------------------------------------------
+
+for z = -130,130,40 do
+
+	createMountain(
+		180,
+		z,
+		math.random(35,55),
+		math.random(25,38)
+	)
+
+end
+
+--------------------------------------------------
+-- TEXTO DE LA TECLA
+--------------------------------------------------
+
+-- OJO: en la cara "Top" de un SurfaceGui, Roblox mapea el ANCHO del
+-- lienzo al Size.Z de la parte (el lado corto) y el ALTO al Size.X
+-- (el lado largo) -- al revés de lo intuitivo. Por eso "SPACE" o
+-- "ENTER" salían apiladas letra por letra en vez de leerse de corrido.
+-- El "rotator" de abajo arma el texto en una caja con la proporción
+-- correcta (ancho real = Size.X) y la rota para que encaje en el
+-- lienzo real de la cara.
+
+local function addText(keyPart,text)
 
 	local gui = Instance.new("SurfaceGui")
+
+	gui.Name = "KeyText"
 	gui.Face = Enum.NormalId.Top
-	gui.Parent = key
 
-	local text = Instance.new("TextLabel")
-	text.Size = UDim2.new(1, 0, 1, 0)
-	text.BackgroundTransparency = 1
-	text.Text = label
-	text.TextScaled = true
-	text.Font = Enum.Font.GothamBold
-	text.TextColor3 = Color3.fromRGB(40, 40, 40)
-	text.Parent = gui
+	gui.AlwaysOnTop = true
+	gui.LightInfluence = 0
 
-	return key
+	gui.SizingMode =
+		Enum.SurfaceGuiSizingMode.PixelsPerStud
+
+	gui.PixelsPerStud = 60
+
+	gui.Parent = keyPart
+
+
+	local canvasWidth = keyPart.Size.Z * gui.PixelsPerStud
+	local canvasHeight = keyPart.Size.X * gui.PixelsPerStud
+
+	local rotator = Instance.new("Frame")
+
+	rotator.Name = "Rotator"
+	rotator.BackgroundTransparency = 1
+	rotator.BorderSizePixel = 0
+
+	rotator.AnchorPoint = Vector2.new(0.5,0.5)
+	rotator.Position = UDim2.new(0.5,0,0.5,0)
+
+	-- Caja "acostada" (ancho = lado largo) que después de rotar
+	-- termina ocupando justo el lienzo real (angosto x alto).
+	rotator.Size = UDim2.new(0,canvasHeight,0,canvasWidth)
+	rotator.Rotation = -90
+
+	rotator.Parent = gui
+
+
+	local label = Instance.new("TextLabel")
+
+	label.Size = UDim2.new(1,0,1,0)
+
+	label.BackgroundTransparency = 1
+
+	label.Text = text
+
+	label.TextColor3 =
+		Color3.fromRGB(10,10,10)
+
+	label.Font = Enum.Font.GothamBlack
+
+	label.TextScaled = true
+
+	label.TextXAlignment =
+		Enum.TextXAlignment.Center
+
+	label.TextYAlignment =
+		Enum.TextYAlignment.Center
+
+	label.Parent = rotator
+
+
+	local padding =
+		Instance.new("UIPadding")
+
+	padding.PaddingTop =
+		UDim.new(0.18,0)
+
+	padding.PaddingBottom =
+		UDim.new(0.18,0)
+
+	padding.PaddingLeft =
+		UDim.new(0.12,0)
+
+	padding.PaddingRight =
+		UDim.new(0.12,0)
+
+	padding.Parent = label
+
 end
 
-local function buildKeyboard()
-	local keyboard = Instance.new("Model")
-	keyboard.Name = "Keyboard"
+--------------------------------------------------
+-- CREAR TECLA
+--------------------------------------------------
 
-	local rowDepth = KEY_SIZE + GAP
+local function createKey(text,x,z,width,depth)
 
-	for rowIndex, row in ipairs(ROWS) do
-		local totalWidth = -GAP
-		for _, keyData in ipairs(row) do
-			totalWidth = totalWidth + keyData[2] * KEY_SIZE + GAP
-		end
+	local key =
+		createPart(
+			text,
+			Vector3.new(
+				width,
+				1,
+				depth
+			),
+			Vector3.new(
+				x,
+				2.25,
+				z
+			),
+			WHITE,
+			Enum.Material.SmoothPlastic
+		)
 
-		local x = -totalWidth / 2
-		local z = (rowIndex - 1) * rowDepth
+	addText(key,text)
 
-		for _, keyData in ipairs(row) do
-			local label, widthUnits = keyData[1], keyData[2]
-			local width = widthUnits * KEY_SIZE + (widthUnits - 1) * GAP
 
-			createKeyPart(label, width, CFrame.new(x + width / 2, THICKNESS / 2, z), keyboard)
+	--------------------------------------------------
+	-- ILUMINACION VERDE
+	--------------------------------------------------
 
-			x = x + width + GAP
-		end
+	if specialKeys[text] then
+
+		local active = false
+
+		key.Touched:Connect(function(hit)
+
+			local character = hit.Parent
+
+			if not character then
+				return
+			end
+
+			local humanoid =
+				character:FindFirstChildOfClass(
+					"Humanoid"
+				)
+
+			if humanoid and not active then
+
+				active = true
+
+				key.Color = GREEN
+				key.Material = Enum.Material.Neon
+
+				local light =
+					Instance.new("PointLight")
+
+				light.Color = GREEN
+				light.Brightness = 2
+				light.Range = 12
+
+				light.Parent = key
+
+				task.wait(0.8)
+
+				light:Destroy()
+
+				key.Color = WHITE
+
+				key.Material =
+					Enum.Material.SmoothPlastic
+
+				task.wait(0.1)
+
+				active = false
+
+			end
+
+		end)
+
 	end
 
-	keyboard.Parent = Workspace
-	return keyboard
 end
 
-local function buildGround()
-	local totalDepth = #ROWS * (KEY_SIZE + GAP)
+--------------------------------------------------
+-- MEDIDAS
+--------------------------------------------------
 
-	local ground = Instance.new("Part")
-	ground.Name = "Ground"
-	ground.Anchored = true
-	ground.Material = Enum.Material.Grass
-	ground.Color = Color3.fromRGB(74, 155, 72)
-	ground.Size = Vector3.new(140, 1, 140)
-	ground.CFrame = CFrame.new(0, -0.5, totalDepth / 2)
-	ground.Parent = Workspace
+local KEY = 6
+local DEPTH = 6
+
+--------------------------------------------------
+-- FILA DE NUMEROS
+--------------------------------------------------
+
+createKey("ESC",-43,-15,7,DEPTH)
+
+local numbers = {
+	"1","2","3","4","5",
+	"6","7","8","9","0"
+}
+
+for i,number in ipairs(numbers) do
+
+	createKey(
+		number,
+		-34 + ((i-1)*6.5),
+		-15,
+		KEY,
+		DEPTH
+	)
+
 end
 
-local function highlightTargetKeys(keyboard)
-	for _, key in ipairs(keyboard:GetDescendants()) do
-		if key:IsA("BasePart") and TARGET_KEYS[string.upper(key.Name)] then
-			local lit = false
+createKey(
+	"BACK",
+	38,
+	-15,
+	12,
+	DEPTH
+)
 
-			key.Touched:Connect(function(hit)
-				local humanoid = hit.Parent and hit.Parent:FindFirstChildOfClass("Humanoid")
-				if lit or not humanoid then
-					return
-				end
+--------------------------------------------------
+-- FILA QWERTY
+--------------------------------------------------
 
-				lit = true
-				key.Color = LIT_COLOR
-			end)
-		end
-	end
+createKey(
+	"TAB",
+	-42,
+	-8,
+	9,
+	DEPTH
+)
+
+local row1 = {
+	"Q","W","E","R","T",
+	"Y","U","I","O","P"
+}
+
+for i,letter in ipairs(row1) do
+
+	createKey(
+		letter,
+		-32 + ((i-1)*6.5),
+		-8,
+		KEY,
+		DEPTH
+	)
+
 end
 
--- El teclado se arma siempre en (0,0,0). Si tu mapa ya tenía otro
--- spawn en otro lado del mundo, ibas a aparecer lejos y no ibas a
--- ver nada: por eso acá abajo se teletransporta al jugador justo
--- enfrente del teclado apenas aparece, sin importar dónde esté el
--- SpawnLocation.
-local START_CFRAME = CFrame.new(0, THICKNESS + 3, -10)
+--------------------------------------------------
+-- FILA ASDF
+--------------------------------------------------
 
-local function moveCharacterToKeyboard(character)
-	local root = character:WaitForChild("HumanoidRootPart", 5)
-	if root then
-		character:PivotTo(START_CFRAME)
-	end
+createKey(
+	"CAPS",
+	-40,
+	-1,
+	12,
+	DEPTH
+)
+
+local row2 = {
+	"A","S","D","F","G",
+	"H","J","K","L"
+}
+
+for i,letter in ipairs(row2) do
+
+	createKey(
+		letter,
+		-28 + ((i-1)*6.5),
+		-1,
+		KEY,
+		DEPTH
+	)
+
 end
 
-local function onPlayerAdded(player)
-	player.CharacterAdded:Connect(moveCharacterToKeyboard)
-	if player.Character then
-		moveCharacterToKeyboard(player.Character)
-	end
+createKey(
+	"ENTER",
+	36,
+	-1,
+	16,
+	DEPTH
+)
+
+--------------------------------------------------
+-- FILA ZXCV
+--------------------------------------------------
+
+createKey(
+	"SHIFT",
+	-38,
+	6,
+	16,
+	DEPTH
+)
+
+local row3 = {
+	"Z","X","C","V","B","N","M"
+}
+
+for i,letter in ipairs(row3) do
+
+	createKey(
+		letter,
+		-25 + ((i-1)*6.5),
+		6,
+		KEY,
+		DEPTH
+	)
+
 end
 
-for _, player in ipairs(Players:GetPlayers()) do
-	onPlayerAdded(player)
-end
-Players.PlayerAdded:Connect(onPlayerAdded)
+createKey(
+	"SHIFT",
+	34,
+	6,
+	18,
+	DEPTH
+)
 
-local keyboard = Workspace:FindFirstChild("Keyboard")
-if not keyboard then
-	keyboard = buildKeyboard()
-	buildGround()
-	print("[KeyboardMap] Teclado creado en Workspace.Keyboard (busca 'Keyboard' y 'Ground' en el Explorer si no lo ves).")
+--------------------------------------------------
+-- FILA INFERIOR
+--------------------------------------------------
+
+createKey(
+	"CTRL",
+	-41,
+	13,
+	9,
+	DEPTH
+)
+
+createKey(
+	"ALT",
+	-31,
+	13,
+	8,
+	DEPTH
+)
+
+--------------------------------------------------
+-- SPACE GRANDE
+--------------------------------------------------
+
+createKey(
+	"SPACE",
+	0,
+	13,
+	46,
+	DEPTH
+)
+
+createKey(
+	"ALT",
+	31,
+	13,
+	8,
+	DEPTH
+)
+
+createKey(
+	"CTRL",
+	41,
+	13,
+	9,
+	DEPTH
+)
+
+--------------------------------------------------
+-- CAMINO
+--------------------------------------------------
+
+createPart(
+	"Path",
+	Vector3.new(14,0.4,45),
+	Vector3.new(0,0.75,45),
+	Color3.fromRGB(110,110,110),
+	Enum.Material.Concrete
+)
+
+--------------------------------------------------
+-- SPAWN
+--------------------------------------------------
+
+local spawn =
+	Workspace:FindFirstChildWhichIsA(
+		"SpawnLocation"
+	)
+
+if spawn then
+
+	spawn.Position =
+		Vector3.new(0,2,70)
+
+	spawn.Size =
+		Vector3.new(10,1,10)
+
+	spawn.Anchored = true
+	spawn.Neutral = true
+
+else
+
+	spawn =
+		Instance.new("SpawnLocation")
+
+	spawn.Name =
+		"SpawnLocation"
+
+	spawn.Position =
+		Vector3.new(0,2,70)
+
+	spawn.Size =
+		Vector3.new(10,1,10)
+
+	spawn.Anchored = true
+	spawn.Neutral = true
+
+	spawn.Parent =
+		Workspace
+
 end
 
-highlightTargetKeys(keyboard)
+--------------------------------------------------
+-- CARTEL
+--------------------------------------------------
+
+local sign =
+	createPart(
+		"ROBUX_SIGN",
+		Vector3.new(50,10,1),
+		Vector3.new(0,9,-35),
+		BLACK,
+		Enum.Material.SmoothPlastic
+	)
+
+local signGui =
+	Instance.new("SurfaceGui")
+
+signGui.Face =
+	Enum.NormalId.Front
+
+signGui.AlwaysOnTop = true
+
+signGui.LightInfluence = 0
+
+signGui.Parent = sign
+
+local signText =
+	Instance.new("TextLabel")
+
+signText.Size =
+	UDim2.new(1,0,1,0)
+
+signText.BackgroundTransparency = 1
+
+signText.Text =
+	"R O B U X"
+
+signText.TextColor3 =
+	Color3.fromRGB(255,255,255)
+
+signText.TextScaled = true
+
+signText.Font =
+	Enum.Font.GothamBlack
+
+signText.Parent =
+	signGui
+
+--------------------------------------------------
+
+print("MAPA ROBUX CREADO CORRECTAMENTE")
