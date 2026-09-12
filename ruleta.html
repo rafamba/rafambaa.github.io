@@ -361,11 +361,24 @@
   const resultNum = document.getElementById('resultNum');
   const closeModalBtn = document.getElementById('closeModal');
 
-  // Ruta de las imágenes de recompensa. Reemplaza los archivos en
-  // assets/ruleta/1.svg ... 14.svg por tus propias imágenes (mismo nombre,
-  // o cambia la extensión aquí si usas .png / .jpg).
+  // Imagen de recompensa para cada número (1 al 14), generada al vuelo
+  // como SVG para que todo quede en un solo archivo HTML (sin carpetas
+  // ni imágenes externas). Para usar tus propias imágenes, reemplaza el
+  // contenido de este arreglo por URLs o por imágenes en base64
+  // (data:image/png;base64,...), manteniendo un elemento por número.
+  const REWARD_IMAGES = Array.from({ length: TOTAL }, (_, i) => {
+    const n = i + 1;
+    const hue = (i * 360 / TOTAL).toFixed(1);
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'>` +
+      `<circle cx='80' cy='80' r='74' fill='hsl(${hue}deg 70% 92%)' stroke='hsl(${hue}deg 60% 45%)' stroke-width='6'/>` +
+      `<text x='80' y='72' font-size='42' text-anchor='middle' dominant-baseline='middle'>🎁</text>` +
+      `<text x='80' y='122' font-size='44' font-family='Arial, Helvetica, sans-serif' font-weight='900' text-anchor='middle' fill='hsl(${hue}deg 60% 30%)'>${n}</text>` +
+      `</svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  });
+
   function rewardSrc(n){
-    return `assets/ruleta/${n}.svg`;
+    return REWARD_IMAGES[n - 1];
   }
 
   // Fondo de la ruleta: 14 gajos de color en arcoíris parejo
